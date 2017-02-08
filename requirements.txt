@@ -1,0 +1,5 @@
+ujson
+polyglot>=16.7
+numba
+git+https://github.com/bkj/emoji.git
+git+https://github.com/bkj/twutils.git

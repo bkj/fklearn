@@ -13,6 +13,7 @@
 """
 
 import numpy as np
+from twutils import word_ngrams
 from numba import autojit
 
 def _sigmoid(x):
@@ -36,8 +37,16 @@ def _score_l2(X):
     
     return num / denom
 
-# --
-# Jitting functions
-
 sigmoid = autojit(_sigmoid)
 score_l2 = autojit(_score_l2)
+
+def tfidf_svc_predict(x, lookup):
+    ngrams = word_ngrams(x)
+    weights = [(ngrams.count(z), ) + lookup['coef'][z] for z in set(ngrams) if z in lookup['coef']]
+    
+    score = lookup['intercept']
+    if weights:
+        score += score_l2_(weights)
+    
+    return sigmoid(score * lookup['calibration_coef'] + lookup['calibration_intercept'])
+
