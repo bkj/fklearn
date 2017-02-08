@@ -2,6 +2,7 @@
     core.py
 """
 
+from copy import copy
 import numpy as np
 from twutils import word_ngrams
 from numba import autojit
