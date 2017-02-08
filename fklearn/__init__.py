@@ -1,1 +1,1 @@
-from core import tfidf_svc_predict
+from core import tfidf_svc_predict, tfidf_svc_predict_multi
