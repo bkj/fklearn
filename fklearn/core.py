@@ -39,7 +39,7 @@ def _make_weights(ngrams, lookup, sublinear_tf=False):
 
 sigmoid = autojit(_sigmoid)
 score_l2 = autojit(_score_l2)
-make_weights = autojit(_make_weights)
+make_weights = _make_weights
 
 # --
 # Model re-implementations
@@ -81,4 +81,29 @@ def tfidf_svr_predict(x, lookup, minn=1, maxn=2, sublinear_tf=False):
         score += score_l2(weights)
     
     return score
+
+models = {
+    "tfidf_svc_predict" : tfidf_svc_predict,
+    "tfidf_svc_predict_multi" : tfidf_svc_predict_multi,
+    "tfidf_svr_predict" : tfidf_svr_predict,
+}
+
+# --
+# Load model wrapper
+
+def load_model(lookup):
+    if 'params' not in lookup:
+        raise Exception('!! need `params` to be set in the lookup')
+    
+    predict_function = models[lookup['params']['model']]
+    def f(x):
+        return predict_function(x, lookup, 
+            minn=lookup['params']['minn'], 
+            maxn=lookup['params']['maxn'], 
+            sublinear_tf=lookup['params']['sublinear_tf']
+        )
+    
+    return f
+
+
 
