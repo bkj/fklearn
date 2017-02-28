@@ -29,26 +29,38 @@ def _score_l2(X, i=0):
     
     return num / denom
 
+def _make_weights(ngrams, lookup, sublinear_tf=False):
+    if not sublinear_tf:
+        weights = [(ngrams.count(z), ) + lookup['coef'][z] for z in set(ngrams) if z in lookup['coef']]
+    else:
+        weights = [(1 + np.log(ngrams.count(z)), ) + lookup['coef'][z] for z in set(ngrams) if z in lookup['coef']]
+    
+    return weights
+
 sigmoid = autojit(_sigmoid)
 score_l2 = autojit(_score_l2)
+make_weights = autojit(_make_weights)
 
 # --
 # Model re-implementations
 
-def tfidf_svc_predict(x, lookup):
-    ngrams = word_ngrams(x.lower())
-    weights = [(ngrams.count(z), ) + lookup['coef'][z] for z in set(ngrams) if z in lookup['coef']]
+def tfidf_svc_predict(x, lookup, minn=1, maxn=2, sublinear_tf=False):
+    """ Binary classification from coefficient plus intercept """
+    ngrams = word_ngrams(x.lower(), minn=minn, maxn=maxn)
+    weights = make_weights(ngrams, lookup, sublinear_tf=sublinear_tf)
     
     score = lookup['intercept']
     if weights:
         score += score_l2(weights)
     
-    return sigmoid(score * lookup['calibration_coef'] + lookup['calibration_intercept'])
+    score = score * lookup['calibration_coef'] + lookup['calibration_intercept']
+    return sigmoid(score)
 
 
-def tfidf_svc_predict_multi(x, lookup):
-    ngrams = word_ngrams(x.lower())
-    weights = [(ngrams.count(z), ) + lookup['coef'][z] for z in set(ngrams) if z in lookup['coef']]
+def tfidf_svc_predict_multi(x, lookup, minn=1, maxn=2):
+    """ Multi-class sigmoid classification from coefficient plus intercept """
+    ngrams = word_ngrams(x.lower(), minn=minn, maxn=maxn)
+    weights = make_weights(ngrams, lookup, sublinear_tf=sublinear_tf)
     
     scores = copy(lookup['intercept'])
     if weights:
@@ -57,3 +69,16 @@ def tfidf_svc_predict_multi(x, lookup):
             scores[i] = sigmoid(scores[i] * lookup['calibration_coef'][i] + lookup['calibration_intercept'][i])
     
     return scores
+
+
+def tfidf_svr_predict(x, lookup, minn=1, maxn=2, sublinear_tf=False):
+    """ Regression from coefficient plus intercept """
+    ngrams = word_ngrams(x.lower(), minn=minn, maxn=maxn)
+    weights = make_weights(ngrams, lookup, sublinear_tf=sublinear_tf)
+    
+    score = lookup['intercept']
+    if weights:
+        score += score_l2(weights)
+    
+    return score
+
