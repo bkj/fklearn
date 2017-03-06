@@ -57,7 +57,7 @@ def tfidf_svc_predict(x, lookup, minn=1, maxn=2, sublinear_tf=False):
     return sigmoid(score)
 
 
-def tfidf_svc_predict_multi(x, lookup, minn=1, maxn=2):
+def tfidf_svc_predict_multi(x, lookup, minn=1, maxn=2, sublinear_tf=False):
     """ Multi-class sigmoid classification from coefficient plus intercept """
     ngrams = word_ngrams(x.lower(), minn=minn, maxn=maxn)
     weights = make_weights(ngrams, lookup, sublinear_tf=sublinear_tf)
