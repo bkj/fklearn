@@ -82,10 +82,16 @@ def tfidf_svr_predict(x, lookup, minn=1, maxn=2, sublinear_tf=False):
     
     return score
 
+
+def vector_svc_predict(x, lookup, minn=None, maxn=None, sublinear_tf=None):
+    return (x * lookup['coef'] + lookup['intercept']) * lookup['calibration_coef'] + lookup['calibration_intercept']
+
+
 models = {
     "tfidf_svc_predict" : tfidf_svc_predict,
     "tfidf_svc_predict_multi" : tfidf_svc_predict_multi,
     "tfidf_svr_predict" : tfidf_svr_predict,
+    "vector_svc_predict" : vector_svc_predict,
 }
 
 # --
@@ -96,14 +102,14 @@ def load_model(lookup):
         raise Exception('!! need `params` to be set in the lookup')
     
     predict_function = models[lookup['params']['model']]
-    def f(x):
+    def _fklearn_load_model_predict(x):
         return predict_function(x, lookup, 
             minn=lookup['params']['minn'], 
             maxn=lookup['params']['maxn'], 
             sublinear_tf=lookup['params']['sublinear_tf']
         )
     
-    return f
+    return _fklearn_load_model_predict
 
 
 
