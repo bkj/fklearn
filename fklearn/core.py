@@ -87,7 +87,13 @@ def tfidf_svr_predict(x, lookup):
 
 
 def vector_svc_predict(x, lookup):
-    return (x * lookup['coef'] + lookup['intercept']) * lookup['calibration_coef'] + lookup['calibration_intercept']
+    params = lookup['params']
+    if params['norm']:
+        x /= np.sqrt((x ** 2).sum())
+    
+    raw_score = ((x * lookup['coef']).sum() + lookup['intercept']) 
+    cal_score = raw_score * lookup['calibration_coef'] + lookup['calibration_intercept']
+    return sigmoid(cal_score)
 
 
 models = {
