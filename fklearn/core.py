@@ -44,10 +44,11 @@ make_weights = _make_weights
 # --
 # Model re-implementations
 
-def tfidf_svc_predict(x, lookup, minn=1, maxn=2, sublinear_tf=False):
+def tfidf_svc_predict(x, lookup):
     """ Binary classification from coefficient plus intercept """
-    ngrams = word_ngrams(x.lower(), minn=minn, maxn=maxn)
-    weights = make_weights(ngrams, lookup, sublinear_tf=sublinear_tf)
+    params = lookup['params']
+    ngrams = word_ngrams(x.lower(), minn=params['minn'], maxn=params['maxn'])
+    weights = make_weights(ngrams, lookup, sublinear_tf=params['sublinear_tf'])
     
     score = lookup['intercept']
     if weights:
@@ -57,10 +58,11 @@ def tfidf_svc_predict(x, lookup, minn=1, maxn=2, sublinear_tf=False):
     return sigmoid(score)
 
 
-def tfidf_svc_predict_multi(x, lookup, minn=1, maxn=2, sublinear_tf=False):
+def tfidf_svc_predict_multi(x, lookup):
     """ Multi-class sigmoid classification from coefficient plus intercept """
-    ngrams = word_ngrams(x.lower(), minn=minn, maxn=maxn)
-    weights = make_weights(ngrams, lookup, sublinear_tf=sublinear_tf)
+    params = lookup['params']
+    ngrams = word_ngrams(x.lower(), minn=params['minn'], maxn=params['maxn'])
+    weights = make_weights(ngrams, lookup, sublinear_tf=params['sublinear_tf'])
     
     scores = copy(lookup['intercept'])
     if weights:
@@ -71,10 +73,11 @@ def tfidf_svc_predict_multi(x, lookup, minn=1, maxn=2, sublinear_tf=False):
     return scores
 
 
-def tfidf_svr_predict(x, lookup, minn=1, maxn=2, sublinear_tf=False):
+def tfidf_svr_predict(x, lookup):
     """ Regression from coefficient plus intercept """
-    ngrams = word_ngrams(x.lower(), minn=minn, maxn=maxn)
-    weights = make_weights(ngrams, lookup, sublinear_tf=sublinear_tf)
+    params = lookup['params']
+    ngrams = word_ngrams(x.lower(), minn=params['minn'], maxn=params['maxn'])
+    weights = make_weights(ngrams, lookup, sublinear_tf=params['sublinear_tf'])
     
     score = lookup['intercept']
     if weights:
@@ -83,7 +86,7 @@ def tfidf_svr_predict(x, lookup, minn=1, maxn=2, sublinear_tf=False):
     return score
 
 
-def vector_svc_predict(x, lookup, minn=None, maxn=None, sublinear_tf=None):
+def vector_svc_predict(x, lookup):
     return (x * lookup['coef'] + lookup['intercept']) * lookup['calibration_coef'] + lookup['calibration_intercept']
 
 
@@ -103,11 +106,7 @@ def load_model(lookup):
     
     predict_function = models[lookup['params']['model']]
     def _fklearn_load_model_predict(x):
-        return predict_function(x, lookup, 
-            minn=lookup['params']['minn'], 
-            maxn=lookup['params']['maxn'], 
-            sublinear_tf=lookup['params']['sublinear_tf']
-        )
+        return predict_function(x, lookup)
     
     return _fklearn_load_model_predict
 
